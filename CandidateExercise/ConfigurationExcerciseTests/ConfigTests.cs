@@ -5,10 +5,11 @@ using log4net.Config;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
+
 namespace FutureWonder.Exercises.Configuration
 {
     using KVPList = IList<KeyValuePair<string, ConfigValue>>;
-
+    using KVP = KeyValuePair<string, ConfigValue>;
     [TestClass]
     public class ConfigTests
     {
@@ -23,7 +24,7 @@ namespace FutureWonder.Exercises.Configuration
         }
 
         [TestInitialize]
-        private void TestFrameworkInitialization()
+        public void TestFrameworkInitialization()
         {
             _log.Info("Initializing Framework");
             _persistSource = _repository.Create<IPersistSource>();
@@ -41,9 +42,17 @@ namespace FutureWonder.Exercises.Configuration
         [TestMethod]
         public void LoadValueTest()
         {
-            KVPList list = new List<KeyValuePair<string, ConfigValue>>();
+            KVPList list = new List<KeyValuePair<string, ConfigValue>>()
+            {
+                new KeyValuePair<string, ConfigValue>("Key1", new ConfigValue(){ Value = "1",ValueType = ValueType.ValueString}),
+                new KeyValuePair<string, ConfigValue>("Key2", new ConfigValue(){ Value = 2.ToString(),ValueType = ValueType.ValueInt}),
+                new KeyValuePair<string, ConfigValue>("Key3", new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString}),
+            };
+
             _persistSource.Setup(ps => ps.LoadValues(It.IsAny<List<string>>())).Returns(list);
 
+            var convertedConfigValue = _config.GetValue("Key1");
+            Assert.AreEqual("1", convertedConfigValue.Value);
         }
 
         [TestMethod]
@@ -51,12 +60,16 @@ namespace FutureWonder.Exercises.Configuration
         {
             _log.Info("SaveValueTest");
 
-            // do the save operation
+            var stringConfigValue = new ConfigValue
+            {
+                Value = "Googles",
+                ValueType = ValueType.ValueString
+            };
+            var kvp = new KeyValuePair<string, ConfigValue>("Bing", stringConfigValue);
+            _config.SaveValue(kvp);
 
-            // check for the persist call
-
-            _persistSource.Verify(p => p.PersistValues(It.IsAny<List<KeyValuePair<string, ConfigValue>>> ()), Times.Once);
-            throw new NotImplementedException();
+            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(list => list[0].Key.Equals("Bing"))), Times.Once);
         }
+       
     }
 }

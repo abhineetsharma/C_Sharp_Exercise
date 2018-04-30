@@ -3,3 +3,10 @@
 ################################################################################
 
 /.vs
+/CandidateExercise/ConfigurationExcerciseTests/bin/Debug
+/CandidateExercise/ConfigurationExcerciseTests/obj
+/CandidateExercise/ConfigurationExercise/.localhistory
+/CandidateExercise/ConfigurationExercise/.vs/ConfigurationExercise
+/CandidateExercise/ConfigurationExercise/obj/Debug
+/CandidateExercise/ConfigurationExercise/obj/Release
+/CandidateExercise/ConfigurationExercise/packages

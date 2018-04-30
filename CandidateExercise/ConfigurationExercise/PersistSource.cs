@@ -9,6 +9,9 @@ namespace FutureWonder.Exercises.Configuration
 
     public class PersistException : Exception
     {
+        //public PersistException() { }
+        public PersistException(String message, PersistException exception) : base(message, exception) { }
+
     }
 
     public interface IPersistSource

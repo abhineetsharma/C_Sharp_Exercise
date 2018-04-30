@@ -1,16 +1,20 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
-using log4net;
 
 namespace FutureWonder.Exercises.Configuration
 {
+    using KList = IList<string>;
     using KVP = KeyValuePair<string, ConfigValue>;
     using KVPList = IList<KeyValuePair<string, ConfigValue>>;
-    using KList = IList<string>;
 
     // Strongly named exceptions
     public class ConfigErrorException : Exception
     {
+        public ConfigErrorException(String message, PersistException exception) : base(message, exception)
+        {
+            Console.WriteLine(message);
+        }
     }
 
     public class User
@@ -70,9 +74,9 @@ namespace FutureWonder.Exercises.Configuration
         private readonly ILog _log = LogManager.GetLogger(nameof(Config));
         private IPersistSource _persistSource;
 
-        public Config(IPersistSource persistSource)
+        public Config(IPersistSource storage)
         {
-            _persistSource = persistSource;
+            _persistSource = storage;
         }
 
         public void Initialize()
@@ -88,22 +92,64 @@ namespace FutureWonder.Exercises.Configuration
 
         public ConfigValue GetValue(string key)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var persistenceStorage = _persistSource;
+                KVPList kvList = GetValues(new List<String>() { key });
+                if (kvList == null)
+                    throw new PersistException("cannon get the value " + key, null);
+                return kvList[0].Value;
+            }
+            catch (PersistException ex)
+            {
+                Console.WriteLine(ex);
+                throw ex;
+            }
         }
 
         public void SaveValue(KVP kvp)
         {
-            throw new NotImplementedException();
+            //var persistenceStorage = _persistSource;
+
+            try
+            {
+                var list = new List<KVP>() { kvp };
+                SaveValues(list);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
 
         public void SaveValues(KVPList kvps)
         {
-            throw new NotImplementedException();
+            try
+            {
+                _persistSource.PersistValues(kvps);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         public KVPList GetValues(KList keys)
         {
-            throw new NotImplementedException();
+            KVPList kvpList = null;
+            var storage = _persistSource;
+            if (null != storage)
+            {
+                try
+                {
+                    kvpList = storage.LoadValues(keys);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
+            }
+            return kvpList;
         }
 
         public ConfigValue GetValue(User user, string key)
