@@ -1,6 +1,7 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FutureWonder.Exercises.Configuration
 {
@@ -20,6 +21,26 @@ namespace FutureWonder.Exercises.Configuration
     public class User
     {
         public string Username { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            User user = obj as User;
+            if (null != user)
+            {
+                return user.Username.Equals(Username);
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return Username;
+        }
     }
 
     public class App
@@ -154,22 +175,57 @@ namespace FutureWonder.Exercises.Configuration
 
         public ConfigValue GetValue(User user, string key)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var kvpList = GetValues(new List<String>() { key }).Where(e => e.Value.User.Equals(user)).ToList();
+                if (kvpList == null)
+                    throw new PersistException("cannon get the value " + key, null);
+                return kvpList[0].Value;
+            }
+            catch (PersistException ex)
+            {
+                Console.WriteLine(ex);
+                throw ex;
+            }
         }
 
         public KVPList GetValues(User user, KList keys)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            KVPList kvpList = null;
+            var storage = _persistSource;
+            if (null != storage)
+            {
+                try
+                {
+
+                    kvpList = GetValues(keys).Where(e => e.Value.User.Equals(user)).ToList();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
+            }
+            return kvpList;
         }
 
         public void SaveValue(User user, KVP kvp)
         {
-            throw new NotImplementedException();
+            SaveValues(user, new List<KVP> { kvp });
         }
 
         public void SaveValues(User user, KVPList kvps)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var kvpList = kvps.Where(e => e.Value.User.Equals(user)).ToList();
+                SaveValues(kvpList);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            //throw new NotImplementedException();
         }
 
         public ConfigValue GetValue(App app, string key)
