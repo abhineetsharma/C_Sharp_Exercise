@@ -25,12 +25,38 @@ namespace FutureWonder.Exercises.Configuration
             XmlConfigurator.Configure();
         }
 
-        [TestInitialize]
+
+        List<String> keyList;
+        KVPList kvplist;
+        User user;
+        String key;
+        ConfigValue configValue;
+       [TestInitialize]
         public void TestFrameworkInitialization()
         {
             _log.Info("Initializing Framework");
             _persistSource = _repository.Create<IPersistSource>();
             _config = new Config(_persistSource.Object);
+            keyList = new List<string>() { "Key1", "Key2", "Key3" };
+            user = new User() { Username = "Abhineet" };
+            kvplist = new List<KeyValuePair<string, ConfigValue>>()
+            {
+                new KeyValuePair<string, ConfigValue>(keyList[0], new ConfigValue(){
+                    Value = "1",
+                    ValueType = ValueType.ValueString,
+                    User = user
+                }),
+                new KeyValuePair<string, ConfigValue>(keyList[1], new ConfigValue(){ Value = 2.ToString(),ValueType = ValueType.ValueInt,User=user}),
+                new KeyValuePair<string, ConfigValue>(keyList[2], new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString,User=user}),
+            };
+            key = "Search";
+            configValue = new ConfigValue()
+            {
+                User = user,
+                Value = "Google",
+                ValueType = ValueType.ValueString
+            };
+
 
         }
 
@@ -44,70 +70,46 @@ namespace FutureWonder.Exercises.Configuration
         [TestMethod]
         public void LoadValueTest()
         {
-            KVPList list = new List<KeyValuePair<string, ConfigValue>>()
-            {
-                new KeyValuePair<string, ConfigValue>("Key1", new ConfigValue(){ Value = "1",ValueType = ValueType.ValueString}),
-                new KeyValuePair<string, ConfigValue>("Key2", new ConfigValue(){ Value = 2.ToString(),ValueType = ValueType.ValueInt}),
-                new KeyValuePair<string, ConfigValue>("Key3", new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString}),
-            };
-
-            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<List<string>>())).Returns(list);
+            _log.Info("Load Value Test");
+            _persistSource.Setup(e => e.LoadValues(It.IsAny<List<string>>())).Returns(kvplist);
 
             var convertedConfigValue = _config.GetValue("Key1");
             Assert.AreEqual("1", convertedConfigValue.Value);
         }
 
         [TestMethod]
-        public void SaveValueTest()
+        public void SaveValue_ShouldSaveAndVerifyTheValueToPersistentSource()
         {
-            _log.Info("SaveValueTest");
+            _log.Info("Save Value Test");
 
             var stringConfigValue = new ConfigValue
             {
                 Value = "Googles",
                 ValueType = ValueType.ValueString
             };
+
             var kvp = new KeyValuePair<string, ConfigValue>("Search", stringConfigValue);
             _config.SaveValue(kvp);
 
-            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(list => list[0].Key.Equals("Search"))), Times.Once);
+            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(f => f[0].Key.Equals("Search"))), Times.Once);
         }
 
         [TestMethod]
-        public void SaveValuesTest()
+        public void SaveValues_ShouldSaveAndVerifyTheValuesToPersistentSource()
         {
 
-            _log.Info("SaveValuesTest");
-            List<KeyValuePair<string, ConfigValue>> kvpList = null;
-            for (int i = 0; i < 3; i++)
-            {
-                var stringConfigValue = new ConfigValue
-                {
-                    Value = "Google" + i,
-                    ValueType = ValueType.ValueString
-                };
-                var kvp = new KeyValuePair<string, ConfigValue>("Search" + i, stringConfigValue);
-                if (kvpList == null)
-                    kvpList = new List<KeyValuePair<string, ConfigValue>>();
-                kvpList.Add(kvp);
+            _log.Info("Save Values Test");
 
-            }
-            _config.SaveValues(kvpList);
+            _config.SaveValues(kvplist);
 
-            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(list => list[0].Key.Contains("Search") && list.Count == 3)), Times.Once);
+            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(list => list.Intersect(kvplist).Count() == 3)), Times.Once);
         }
 
         [TestMethod]
-        public void GetValueTest()
+        public void GetValue_GetsAndVerifyTheValueFromPersistentSource()
         {
-            // _log.Info("GetValueTest");
-            String key = "Search";
-            var configValue = new ConfigValue()
-            {
-                User = null,
-                Value = "Google",
-                ValueType = ValueType.ValueString
-            };
+             _log.Info("Get Value Test");
+           
 
             KVPList kvpList = new List<KVP> { new KVP(key, configValue) };
 
@@ -119,48 +121,35 @@ namespace FutureWonder.Exercises.Configuration
         }
 
         [TestMethod]
-        public void GetValuesTest()
+        public void GetValues_GetsAndVerifyTheValuesFromPersistentSource()
         {
-            List<String> keyList = new List<string>() { "Key1", "Key2", "Key3" };
-            KVPList list = new List<KeyValuePair<string, ConfigValue>>()
-            {
-                new KeyValuePair<string, ConfigValue>(keyList[0], new ConfigValue(){ Value = "1",ValueType = ValueType.ValueString}),
-                new KeyValuePair<string, ConfigValue>(keyList[1], new ConfigValue(){ Value = 2.ToString(),ValueType = ValueType.ValueInt}),
-                new KeyValuePair<string, ConfigValue>(keyList[2], new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString}),
-            };
 
-            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<List<string>>())).Returns(list);
+            _log.Info("Get User Values Test");
+            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<List<string>>())).Returns(kvplist);
 
             var convertedConfigValues = _config.GetValues(keyList);
-            Assert.IsTrue(convertedConfigValues.Intersect(list).Count() == 3);
+            Assert.IsTrue(convertedConfigValues.Intersect(kvplist).Count() == 3);
         }
 
 
         [TestMethod]
-        public void SaveValuesTestUser()
+        public void SaveUserValue_ShouldSaveAndVerifyTheValueForAUserToPersistentSource()
         {
 
-            List<String> keyList = new List<string>() { "Key1", "Key2", "Key3" };
-            User user = new User() { Username = "Abhineet" };
-            KVPList kvpList = new List<KeyValuePair<string, ConfigValue>>()
-            {
-                new KeyValuePair<string, ConfigValue>(keyList[0], new ConfigValue(){ Value = "1",ValueType = ValueType.ValueString,User=user}),
-                new KeyValuePair<string, ConfigValue>(keyList[1], new ConfigValue(){ Value = 2.ToString(),ValueType = ValueType.ValueInt,User=user}),
-                new KeyValuePair<string, ConfigValue>(keyList[2], new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString,User=user}),
-            };
-            _config.SaveValues(user, kvpList);
+            _log.Info("Save User Value Test");
 
-            // _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(list => list.Where(e=>e.Value.User.Equals(user))), Times.Once);
-            _persistSource.Verify(
-               e => e.PersistValues(It.Is<KVPList>(klist => klist.Count == 3 && klist.Intersect(kvpList).Count() == 3)), Times.Once);
+            _config.SaveValues(user, kvplist);
+
+            //_persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(e => e.Where(e=>e.Value.User.Equals(user))).ToList()+-+, Times.Once);
+            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(k => k.Intersect(kvplist).Count() == 3)), Times.Once);
         }
 
         [TestMethod]
-        public void SaveValueTestUser()
+        public void SaveUserValues_ShouldSaveAndVerifyTheValuesForAUserToPersistentSource()
         {
-
+            _log.Info("Save User Values Test");
             List<String> keyList = new List<string>() { "Key1" };
-            User user = new User() { Username = "Abhineet" };
+
             KVPList kvpList = new List<KeyValuePair<string, ConfigValue>>()
             {
                 new KeyValuePair<string, ConfigValue>(keyList[0], new ConfigValue(){ Value = "1",ValueType = ValueType.ValueString,User=user}),
@@ -171,43 +160,27 @@ namespace FutureWonder.Exercises.Configuration
         }
 
         [TestMethod]
-        public void GetUserValueTest()
+        public void GetUserValue_GetsAndVerifyTheValueForAUserFromPersistentSource()
         {
-            // _log.Info("GetValueTest");
-            String key = "Search";
-            User user = new User() { Username = "Abhineet" };
-            var configValue = new ConfigValue()
-            {
-                User = user,
-                Value = "Google",
-                ValueType = ValueType.ValueString
-            };
+             _log.Info("Get User Value Test");
+            
+            KVPList _kvpList = new List<KVP> { new KVP(key, configValue) };
 
-            KVPList kvpList = new List<KVP> { new KVP(key, configValue) };
-
-            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<KList>())).Returns(kvpList);
+            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<KList>())).Returns(_kvpList);
 
             var configVal = _config.GetValue(user, key);
 
-            Assert.AreEqual(kvpList[0].Value, configVal);
+            Assert.AreEqual(_kvpList[0].Value, configVal);
         }
 
         [TestMethod]
-        public void GetUserValuesTest()
+        public void GetUserValues_GetsAndVerifyTheValuesForAUserFromPersistentSource()
         {
-            List<String> keyList = new List<string>() { "Key1", "Key2", "Key3" };
-            User user = new User() { Username = "Abhineet" };
-            KVPList list = new List<KeyValuePair<string, ConfigValue>>()
-            {
-                new KeyValuePair<string, ConfigValue>(keyList[0], new ConfigValue(){ Value = "1",ValueType = ValueType.ValueString,User=user}),
-                new KeyValuePair<string, ConfigValue>(keyList[1], new ConfigValue(){ Value = 2.ToString(),ValueType = ValueType.ValueInt,User=user}),
-                new KeyValuePair<string, ConfigValue>(keyList[2], new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString,User=user}),
-            };
+            _log.Info("Get User Values Test");
+            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<List<string>>())).Returns(kvplist);
 
-            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<List<string>>())).Returns(list);
-
-            var convertedConfigValues = _config.GetValues(user,keyList);
-            Assert.IsTrue(convertedConfigValues.Intersect(list).Count() == 3);
+            var convertedConfigValues = _config.GetValues(user, keyList);
+            Assert.IsTrue(convertedConfigValues.Intersect(kvplist).Count() == 3);
         }
     }
 }

@@ -130,7 +130,6 @@ namespace FutureWonder.Exercises.Configuration
 
         public void SaveValue(KVP kvp)
         {
-            //var persistenceStorage = _persistSource;
 
             try
             {
@@ -218,7 +217,7 @@ namespace FutureWonder.Exercises.Configuration
         {
             try
             {
-                var kvpList = kvps.Where(e => e.Value.User.Equals(user)).ToList();
+                var kvpList = kvps.Where(e =>e.Value.User != null && e.Value.User.Equals(user)).ToList();
                 SaveValues(kvpList);
             }
             catch (Exception ex)
