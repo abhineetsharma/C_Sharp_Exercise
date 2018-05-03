@@ -113,6 +113,7 @@ namespace FutureWonder.Exercises.Configuration
 
         public ConfigValue GetValue(string key)
         {
+            _log.Info("In GetValue");
             try
             {
                 var persistenceStorage = _persistSource;
@@ -123,39 +124,59 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                Console.WriteLine(ex);
+                _log.Info("Persist Exception in  GetValue : " + ex.Message);
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                _log.Info("Exception in  GetValue : " + ex.Message);
                 throw ex;
             }
         }
 
         public void SaveValue(KVP kvp)
         {
-
+            _log.Info("In SaveValue");
             try
             {
                 var list = new List<KVP>() { kvp };
                 SaveValues(list);
             }
+            catch (PersistException ex)
+            {
+                _log.Info("Persist Exception in  SaveValue : " + ex.Message);
+                throw ex;
+            }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                _log.Info("Exception in  SaveValue : " + ex.Message);
+                throw ex;
             }
         }
 
         public void SaveValues(KVPList kvps)
         {
+            _log.Info("In SaveValues");
             try
             {
                 _persistSource.PersistValues(kvps);
             }
+            catch (PersistException ex)
+            {
+                _log.Info("Persist Exception in  SaveValues : " + ex.Message);
+                throw ex;
+            }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _log.Info("Exception in  SaveValues : " + ex.Message);
+                throw ex;
             }
+
         }
 
         public KVPList GetValues(KList keys)
         {
+            _log.Info("In GetValues");
             KVPList kvpList = null;
             var storage = _persistSource;
             if (null != storage)
@@ -163,10 +184,19 @@ namespace FutureWonder.Exercises.Configuration
                 try
                 {
                     kvpList = storage.LoadValues(keys);
+                    if (kvpList == null)
+                        throw new PersistException("cannon get the values for the keys " + keys.ToString(), null);
+
+                }
+                catch (PersistException ex)
+                {
+                    _log.Info("Persist Exception in  GetValues : " + ex.Message);
+                    throw ex;
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    _log.Info("Persist Exception in  GetValues : " + ex.Message);
+                    throw ex;
                 }
             }
             return kvpList;
@@ -174,23 +204,29 @@ namespace FutureWonder.Exercises.Configuration
 
         public ConfigValue GetValue(User user, string key)
         {
+            _log.Info("In GetValue for User " + user);
             try
             {
                 var kvpList = GetValues(new List<String>() { key }).Where(e => e.Value.User.Equals(user)).ToList();
                 if (kvpList == null)
-                    throw new PersistException("cannon get the value " + key, null);
+                    throw new PersistException("cannon get the value for the user " + user + " for key " + key, null);
                 return kvpList[0].Value;
             }
             catch (PersistException ex)
             {
-                Console.WriteLine(ex);
+                _log.Info("Persist Exception in  GetValues for User " + user + " : " + ex.Message);
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                _log.Info("Exception in  GetValues for User " + user + " : " + ex.Message);
                 throw ex;
             }
         }
 
         public KVPList GetValues(User user, KList keys)
         {
-            //throw new NotImplementedException();
+            _log.Info("In GetValues for User " + user);
             KVPList kvpList = null;
             var storage = _persistSource;
             if (null != storage)
@@ -200,9 +236,15 @@ namespace FutureWonder.Exercises.Configuration
 
                     kvpList = GetValues(keys).Where(e => e.Value.User.Equals(user)).ToList();
                 }
+                catch (PersistException ex)
+                {
+                    _log.Info("Persist Exception in  GetValues for User " + user + " : " + ex.Message);
+                    throw ex;
+                }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    _log.Info("Exception in  GetValues for User " + user + " : " + ex.Message);
+                    throw ex;
                 }
             }
             return kvpList;
@@ -210,21 +252,42 @@ namespace FutureWonder.Exercises.Configuration
 
         public void SaveValue(User user, KVP kvp)
         {
-            SaveValues(user, new List<KVP> { kvp });
+            _log.Info("in SaveValue for User " + user);
+            try
+            {
+                SaveValues(user, new List<KVP> { kvp });
+            }
+            catch (PersistException ex)
+            {
+                _log.Info("Persist Exception in SaveValue for User " + user + " : " + ex.Message);
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                _log.Info("Exception in SaveValue for User " + user + " : " + ex.Message);
+                throw ex;
+            }
         }
 
         public void SaveValues(User user, KVPList kvps)
         {
+            _log.Info("in SaveValues for User " + user);
             try
             {
-                var kvpList = kvps.Where(e =>e.Value.User != null && e.Value.User.Equals(user)).ToList();
+                var kvpList = kvps.Where(e => e.Value.User != null && e.Value.User.Equals(user)).ToList();
                 SaveValues(kvpList);
+            }
+            catch (PersistException ex)
+            {
+                _log.Info("Persist Exception in SaveValues for User " + user + " : " + ex.Message);
+                throw ex;
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                _log.Info("Persist Exception in SaveValues for User " + user + " : " + ex.Message);
+                throw ex;
             }
-            //throw new NotImplementedException();
+
         }
 
         public ConfigValue GetValue(App app, string key)
