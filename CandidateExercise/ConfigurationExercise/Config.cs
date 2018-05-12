@@ -124,13 +124,11 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                _log.Info("Persist Exception in  GetValue : " + ex.Message);
-                throw ex;
+                throw catchException("Persist Exception in  GetValue" , ex);
             }
             catch (Exception ex)
             {
-                _log.Info("Exception in  GetValue : " + ex.Message);
-                throw ex;
+                throw catchException("Exception in  GetValue",ex);
             }
         }
 
@@ -144,13 +142,11 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                _log.Info("Persist Exception in  SaveValue : " + ex.Message);
-                throw ex;
+                throw catchException("Persist Exception in  SaveValue",ex);
             }
             catch (Exception ex)
             {
-                _log.Info("Exception in  SaveValue : " + ex.Message);
-                throw ex;
+                throw catchException("Exception in  SaveValue",ex);
             }
         }
 
@@ -163,13 +159,11 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                _log.Info("Persist Exception in  SaveValues : " + ex.Message);
-                throw ex;
+                throw catchException("Persist Exception in  SaveValues",ex);
             }
             catch (Exception ex)
             {
-                _log.Info("Exception in  SaveValues : " + ex.Message);
-                throw ex;
+                throw catchException("Exception in  SaveValues", ex);  
             }
 
         }
@@ -185,18 +179,17 @@ namespace FutureWonder.Exercises.Configuration
                 {
                     kvpList = storage.LoadValues(keys);
                     if (kvpList == null)
-                        throw new PersistException("cannon get the values for the keys " + keys.ToString(), null);
+                        throw new PersistException("cannot get the values for the keys " + keys.ToString(), null);
 
                 }
                 catch (PersistException ex)
                 {
-                    _log.Info("Persist Exception in  GetValues : " + ex.Message);
-                    throw ex;
+                    throw catchException("Persist Exception in  GetValues", ex);
+
                 }
                 catch (Exception ex)
                 {
-                    _log.Info("Persist Exception in  GetValues : " + ex.Message);
-                    throw ex;
+                    throw catchException("Exception in  GetValues", ex);
                 }
             }
             return kvpList;
@@ -205,23 +198,21 @@ namespace FutureWonder.Exercises.Configuration
         public ConfigValue GetValue(User user, string key)
         {
             _log.Info("In GetValue for User " + user);
+
             try
             {
                 var kvpList = GetValues(new List<String>() { key }).Where(e => e.Value.User.Equals(user)).ToList();
-                if (kvpList == null)
-                    throw new PersistException("cannon get the value for the user " + user + " for key " + key, null);
                 return kvpList[0].Value;
             }
             catch (PersistException ex)
             {
-                _log.Info("Persist Exception in  GetValues for User " + user + " : " + ex.Message);
-                throw ex;
+                throw catchException("Persist Exception in  GetValues for User", ex, user);
             }
             catch (Exception ex)
             {
-                _log.Info("Exception in  GetValues for User " + user + " : " + ex.Message);
-                throw ex;
+                throw catchException("Exception in  GetValues for User", ex, user);
             }
+
         }
 
         public KVPList GetValues(User user, KList keys)
@@ -238,13 +229,11 @@ namespace FutureWonder.Exercises.Configuration
                 }
                 catch (PersistException ex)
                 {
-                    _log.Info("Persist Exception in  GetValues for User " + user + " : " + ex.Message);
-                    throw ex;
+                    throw catchException("Persist Exception in  GetValues for User", ex, user);
                 }
                 catch (Exception ex)
                 {
-                    _log.Info("Exception in  GetValues for User " + user + " : " + ex.Message);
-                    throw ex;
+                    throw catchException("Exception in  GetValues for User", ex, user);
                 }
             }
             return kvpList;
@@ -259,13 +248,11 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                _log.Info("Persist Exception in SaveValue for User " + user + " : " + ex.Message);
-                throw ex;
+                throw catchException("Persist Exception in SaveValue for User", ex, user);
             }
             catch (Exception ex)
             {
-                _log.Info("Exception in SaveValue for User " + user + " : " + ex.Message);
-                throw ex;
+                throw catchException("Exception in SaveValue for User ", ex, user);
             }
         }
 
@@ -279,13 +266,11 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                _log.Info("Persist Exception in SaveValues for User " + user + " : " + ex.Message);
-                throw ex;
+                throw catchException("Persist Exception in SaveValues for User", ex, user);
             }
             catch (Exception ex)
             {
-                _log.Info("Persist Exception in SaveValues for User " + user + " : " + ex.Message);
-                throw ex;
+                throw catchException("Exception in SaveValues for User", ex, user);
             }
 
         }
@@ -328,6 +313,12 @@ namespace FutureWonder.Exercises.Configuration
         public void SaveValues(App app, User user, KVPList kvps)
         {
             throw new NotImplementedException();
+        }
+
+        Exception catchException(String message, Exception ex, User user = null)
+        {
+            _log.Error(message + user != null ? " for User " + user : String.Empty + " : " + ex.Message);
+            return ex;
         }
     }
 }

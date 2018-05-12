@@ -8,8 +8,7 @@ namespace FutureWonder.Exercises.Configuration
     using KList = IList<string>;
 
     public class PersistException : Exception
-    {
-        //public PersistException() { }
+    { 
         public PersistException(String message, PersistException exception) : base(message, exception) { }
 
     }

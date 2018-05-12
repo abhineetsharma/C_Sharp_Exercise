@@ -139,8 +139,6 @@ namespace FutureWonder.Exercises.Configuration
             _log.Info("Save User Value Test");
 
             _config.SaveValues(user, kvplist);
-
-            //_persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(e => e.Where(e=>e.Value.User.Equals(user))).ToList()+-+, Times.Once);
             _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(k => k.Intersect(kvplist).Count() == 3)), Times.Once);
         }
 
