@@ -94,7 +94,14 @@ namespace FutureWonder.Exercises.Configuration
     {
         private readonly ILog _log = LogManager.GetLogger(nameof(Config));
         private IPersistSource _persistSource;
-
+        private Exception catchAndThrowException(String message, Exception ex, User user = null)
+        {
+            _log.Error(String.Format("{0} {1} : {2}",
+                message,
+                user != null ? String.Format("for User {0}", user) : String.Empty,
+                ex.Message));   
+            return ex;
+        }
         public Config(IPersistSource storage)
         {
             _persistSource = storage;
@@ -116,19 +123,18 @@ namespace FutureWonder.Exercises.Configuration
             _log.Info("In GetValue");
             try
             {
-                var persistenceStorage = _persistSource;
                 KVPList kvList = GetValues(new List<String>() { key });
                 if (kvList == null)
-                    throw new PersistException("cannon get the value " + key, null);
+                    throw new PersistException("cannot get the value " + key, null);
                 return kvList[0].Value;
             }
             catch (PersistException ex)
             {
-                throw catchException("Persist Exception in  GetValue" , ex);
+                throw catchAndThrowException("Persist Exception in  GetValue", ex);
             }
             catch (Exception ex)
             {
-                throw catchException("Exception in  GetValue",ex);
+                throw catchAndThrowException("Exception in  GetValue", ex);
             }
         }
 
@@ -142,11 +148,11 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                throw catchException("Persist Exception in  SaveValue",ex);
+                throw catchAndThrowException("Persist Exception in  SaveValue", ex);
             }
             catch (Exception ex)
             {
-                throw catchException("Exception in  SaveValue",ex);
+                throw catchAndThrowException("Exception in  SaveValue", ex);
             }
         }
 
@@ -159,11 +165,11 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                throw catchException("Persist Exception in  SaveValues",ex);
+                throw catchAndThrowException("Persist Exception in  SaveValues", ex);
             }
             catch (Exception ex)
             {
-                throw catchException("Exception in  SaveValues", ex);  
+                throw catchAndThrowException("Exception in  SaveValues", ex);
             }
 
         }
@@ -184,12 +190,12 @@ namespace FutureWonder.Exercises.Configuration
                 }
                 catch (PersistException ex)
                 {
-                    throw catchException("Persist Exception in  GetValues", ex);
+                    throw catchAndThrowException("Persist Exception in  GetValues", ex);
 
                 }
                 catch (Exception ex)
                 {
-                    throw catchException("Exception in  GetValues", ex);
+                    throw catchAndThrowException("Exception in  GetValues", ex);
                 }
             }
             return kvpList;
@@ -206,11 +212,11 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                throw catchException("Persist Exception in  GetValues for User", ex, user);
+                throw catchAndThrowException("Persist Exception in  GetValues for User", ex, user);
             }
             catch (Exception ex)
             {
-                throw catchException("Exception in  GetValues for User", ex, user);
+                throw catchAndThrowException("Exception in  GetValues for User", ex, user);
             }
 
         }
@@ -224,16 +230,15 @@ namespace FutureWonder.Exercises.Configuration
             {
                 try
                 {
-
                     kvpList = GetValues(keys).Where(e => e.Value.User.Equals(user)).ToList();
                 }
                 catch (PersistException ex)
                 {
-                    throw catchException("Persist Exception in  GetValues for User", ex, user);
+                    throw catchAndThrowException("Persist Exception in  GetValues for User", ex, user);
                 }
                 catch (Exception ex)
                 {
-                    throw catchException("Exception in  GetValues for User", ex, user);
+                    throw catchAndThrowException("Exception in  GetValues for User", ex, user);
                 }
             }
             return kvpList;
@@ -248,11 +253,11 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                throw catchException("Persist Exception in SaveValue for User", ex, user);
+                throw catchAndThrowException("Persist Exception in SaveValue for User", ex, user);
             }
             catch (Exception ex)
             {
-                throw catchException("Exception in SaveValue for User ", ex, user);
+                throw catchAndThrowException("Exception in SaveValue for User ", ex, user);
             }
         }
 
@@ -266,11 +271,11 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                throw catchException("Persist Exception in SaveValues for User", ex, user);
+                throw catchAndThrowException("Persist Exception in SaveValues for User", ex, user);
             }
             catch (Exception ex)
             {
-                throw catchException("Exception in SaveValues for User", ex, user);
+                throw catchAndThrowException("Exception in SaveValues for User", ex, user);
             }
 
         }
@@ -315,10 +320,6 @@ namespace FutureWonder.Exercises.Configuration
             throw new NotImplementedException();
         }
 
-        Exception catchException(String message, Exception ex, User user = null)
-        {
-            _log.Error(message + user != null ? " for User " + user : String.Empty + " : " + ex.Message);
-            return ex;
-        }
+
     }
 }
