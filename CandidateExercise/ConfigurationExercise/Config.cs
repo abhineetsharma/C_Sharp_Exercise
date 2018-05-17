@@ -96,10 +96,7 @@ namespace FutureWonder.Exercises.Configuration
         private IPersistSource _persistSource;
         private Exception catchAndThrowException(String message, Exception ex, User user = null)
         {
-            _log.Error(String.Format("{0} {1} : {2}",
-                message,
-                user != null ? String.Format("for User {0}", user) : String.Empty,
-                ex.Message));   
+            _log.Error($"{message} {(user != null ? $"for User {user} " : String.Empty)}: {ex.Message}");
             return ex;
         }
         public Config(IPersistSource storage)
