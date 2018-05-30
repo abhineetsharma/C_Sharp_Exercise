@@ -22,42 +22,59 @@ namespace FutureWonder.Exercises.Configuration
         private Mock<IPersistSource> _persistSource;
         private Config _config;
 
-        private List<String> keyList { get { return new List<string>() { "Key1", "Key2", "Key3" }; } }
-        private KVPList kvplist
+        private List<String> KeyList { get { return new List<string>() { "Key1", "Key2", "Key3" }; } }
+        private KVPList Kvplist
         {
             get
             {
                 return
                     new List<KeyValuePair<string, ConfigValue>>()
                     {
-                        new KeyValuePair<string, ConfigValue>(keyList[0], new ConfigValue(){
+                        new KeyValuePair<string, ConfigValue>(KeyList[0], new ConfigValue(){
                             Value = "1",
-                            ValueType = ValueType.ValueString,
-                            User = user
+                            ValueType = ValueType.ValueString
                         }),
-                        new KeyValuePair<string, ConfigValue>(keyList[1], new ConfigValue(){ Value = 2.ToString()}),
-                        new KeyValuePair<string, ConfigValue>(keyList[2], new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString}),
+                        new KeyValuePair<string, ConfigValue>(KeyList[1], new ConfigValue(){ Value = 2.ToString()}),
+                        new KeyValuePair<string, ConfigValue>(KeyList[2], new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString}),
                     };
             }
         }
-        private KVPList kvpUserlist
+        private KVPList KvpUserlist
         {
             get
             {
                 return
                     new List<KeyValuePair<string, ConfigValue>>()
                     {
-                        new KeyValuePair<string, ConfigValue>(keyList[0], new ConfigValue(){
+                        new KeyValuePair<string, ConfigValue>(KeyList[0], new ConfigValue(){
                             Value = "1",
                             ValueType = ValueType.ValueString,
-                            User = user
+                            User = UserTestObject
                         }),
-                        new KeyValuePair<string, ConfigValue>(keyList[1], new ConfigValue(){ Value = 2.ToString(),ValueType = ValueType.ValueInt,User=user}),
-                        new KeyValuePair<string, ConfigValue>(keyList[2], new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString,User=user}),
+                        new KeyValuePair<string, ConfigValue>(KeyList[1], new ConfigValue(){ Value = 2.ToString(),ValueType = ValueType.ValueInt,User=UserTestObject}),
+                        new KeyValuePair<string, ConfigValue>(KeyList[2], new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString,User=UserTestObject}),
                     };
             }
         }
-        private User user
+
+        private KVPList KvpAppList
+        {
+            get
+            {
+                return
+                    new List<KeyValuePair<string, ConfigValue>>()
+                    {
+                        new KeyValuePair<string, ConfigValue>(KeyList[0], new ConfigValue(){
+                            Value = "1",
+                            ValueType = ValueType.ValueString,
+                            App = AppTestObject
+                        }),
+                        new KeyValuePair<string, ConfigValue>(KeyList[1], new ConfigValue(){ Value = 2.ToString(),ValueType = ValueType.ValueInt,App=AppTestObject}),
+                        new KeyValuePair<string, ConfigValue>(KeyList[2], new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString,App=AppTestObject }),
+                    };
+            }
+        }
+        private User UserTestObject
         {
             get
             {
@@ -65,18 +82,15 @@ namespace FutureWonder.Exercises.Configuration
                 { Username = "Abhineet" };
             }
         }
-        private ConfigValue configValue
+
+        private App AppTestObject
         {
             get
             {
-                return new ConfigValue()
-                {
-                    User = user,
-                    Value = "Google",
-                    ValueType = ValueType.ValueString
-                }; ;
+                return new App("Visual Studio");
             }
         }
+
 
         #endregion variables
 
@@ -109,10 +123,10 @@ namespace FutureWonder.Exercises.Configuration
         public void LoadValueTest()
         {
             _log.Info("Load Value Test");
-            _persistSource.Setup(e => e.LoadValues(It.IsAny<List<string>>())).Returns(kvplist);
+            _persistSource.Setup(e => e.LoadValues(It.IsAny<List<string>>())).Returns(Kvplist);
 
-            var convertedConfigValue = _config.GetValue(keyList[0]);
-            Assert.AreEqual(kvplist[0].Value.Value, convertedConfigValue.Value);
+            var convertedConfigValue = _config.GetValue(KeyList[0]);
+            Assert.AreEqual(Kvplist[0].Value.Value, convertedConfigValue.Value);
         }
 
         [TestMethod]
@@ -120,9 +134,9 @@ namespace FutureWonder.Exercises.Configuration
         {
             _log.Info("Save Value Test");
 
-            _config.SaveValue(kvplist[0]);
+            _config.SaveValue(Kvplist[0]);
 
-            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(f => f[0].Key.Equals(keyList[0]))), Times.Once);
+            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(f => f[0].Key.Equals(KeyList[0]))), Times.Once);
         }
 
         [TestMethod]
@@ -131,9 +145,9 @@ namespace FutureWonder.Exercises.Configuration
 
             _log.Info("Save Values Test");
 
-            _config.SaveValues(kvplist);
+            _config.SaveValues(Kvplist);
 
-            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(list => list.Intersect(kvplist).Count() == 3)), Times.Once);
+            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(list => list.Intersect(Kvplist).Count() == 3)), Times.Once);
         }
 
         [TestMethod]
@@ -142,11 +156,11 @@ namespace FutureWonder.Exercises.Configuration
             _log.Info("Get Value Test");
 
 
-            KVPList kvpList = kvplist.Where(e => e.Key.Equals(keyList[0])).ToList();
+            KVPList kvpList = Kvplist.Where(e => e.Key.Equals(KeyList[0])).ToList();
 
             _persistSource.Setup(ps => ps.LoadValues(It.IsAny<KList>())).Returns(kvpList);
 
-            var configVal = _config.GetValue(keyList[0]);
+            var configVal = _config.GetValue(KeyList[0]);
 
             Assert.AreEqual(kvpList[0].Value, configVal);
         }
@@ -156,10 +170,10 @@ namespace FutureWonder.Exercises.Configuration
         {
 
             _log.Info("Get User Values Test");
-            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<List<string>>())).Returns(kvplist);
+            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<List<string>>())).Returns(Kvplist);
 
-            var convertedConfigValues = _config.GetValues(keyList);
-            Assert.IsTrue(convertedConfigValues.Intersect(kvplist).Count() == 3);
+            var convertedConfigValues = _config.GetValues(KeyList);
+            Assert.IsTrue(convertedConfigValues.Intersect(Kvplist).Count() == 3);
         }
 
 
@@ -169,8 +183,8 @@ namespace FutureWonder.Exercises.Configuration
 
             _log.Info("Save User Value Test");
 
-            _config.SaveValues(user, kvpUserlist);
-            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(k => k.Intersect(kvpUserlist).Count() == 3)), Times.Once);
+            _config.SaveValues(UserTestObject, KvpUserlist);
+            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(k => k.Intersect(KvpUserlist).Count() == 3)), Times.Once);
         }
 
         [TestMethod]
@@ -178,8 +192,8 @@ namespace FutureWonder.Exercises.Configuration
         {
             _log.Info("Save User Values Test");
 
-            KVPList kvpList = kvpUserlist.Where(e => e.Key.Equals(keyList[0])).ToList();
-            _config.SaveValues(user, kvpList);
+            KVPList kvpList = KvpUserlist.Where(e => e.Key.Equals(KeyList[0])).ToList();
+            _config.SaveValues(UserTestObject, kvpList);
 
             _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(klist => klist.Count == 1 && klist.Intersect(kvpList).Count() == 1)), Times.Once);
         }
@@ -189,11 +203,11 @@ namespace FutureWonder.Exercises.Configuration
         {
             _log.Info("Get User Value Test");
 
-            KVPList _kvpList = kvpUserlist.Where(e => e.Key.Equals(keyList[0])).ToList();
+            KVPList _kvpList = KvpUserlist.Where(e => e.Key.Equals(KeyList[0])).ToList();
 
             _persistSource.Setup(ps => ps.LoadValues(It.IsAny<KList>())).Returns(_kvpList);
 
-            var configVal = _config.GetValue(user, keyList[0]);
+            var configVal = _config.GetValue(UserTestObject, KeyList[0]);
 
             Assert.AreEqual(_kvpList[0].Value, configVal);
         }
@@ -202,10 +216,55 @@ namespace FutureWonder.Exercises.Configuration
         public void GetUserValues_GetsAndVerifyTheValuesForAUserFromPersistentSource()
         {
             _log.Info("Get User Values Test");
-            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<List<string>>())).Returns(kvpUserlist);
+            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<List<string>>())).Returns(KvpUserlist);
 
-            var convertedConfigValues = _config.GetValues(user, keyList);
-            Assert.IsTrue(convertedConfigValues.Intersect(kvpUserlist).Count() == 3);
+            var convertedConfigValues = _config.GetValues(UserTestObject, KeyList);
+            Assert.IsTrue(convertedConfigValues.Intersect(KvpUserlist).Count() == 3);
+        }
+
+        [TestMethod]
+        public void SaveAppValue_ShouldSaveAndVerifyTheValueForAAppToPersistentSource()
+        {
+
+            _log.Info("Save App Value Test");
+
+            _config.SaveValues(AppTestObject, KvpAppList);
+            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(k => k.Intersect(KvpAppList).Count() == 3)), Times.Once);
+        }
+
+        [TestMethod]
+        public void SaveAppValues_ShouldSaveAndVerifyTheValuesForAAppToPersistentSource()
+        {
+            _log.Info("Save App Values Test");
+
+            KVPList kvpList = KvpAppList.Where(e => e.Key.Equals(KeyList[0])).ToList();
+            _config.SaveValues(AppTestObject, kvpList);
+
+            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(klist => klist.Count == 1 && klist.Intersect(kvpList).Count() == 1)), Times.Once);
+        }
+
+        [TestMethod]
+        public void GetAppValue_GetsAndVerifyTheValueForAAppFromPersistentSource()
+        {
+            _log.Info("Get App Value Test");
+
+            KVPList _kvpList = KvpAppList.Where(e => e.Key.Equals(KeyList[0])).ToList();
+
+            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<KList>())).Returns(_kvpList);
+
+            var configVal = _config.GetValue(AppTestObject, KeyList[0]);
+
+            Assert.AreEqual(_kvpList[0].Value, configVal);
+        }
+
+        [TestMethod]
+        public void GetAppValues_GetsAndVerifyTheValuesForAAppFromPersistentSource()
+        {
+            _log.Info("Get App Values Test");
+            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<List<string>>())).Returns(KvpAppList);
+
+            var convertedConfigValues = _config.GetValues(AppTestObject, KeyList);
+            Assert.IsTrue(convertedConfigValues.Intersect(KvpAppList).Count() == 3);
         }
     }
 }

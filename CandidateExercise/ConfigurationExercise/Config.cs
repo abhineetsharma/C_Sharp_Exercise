@@ -45,7 +45,24 @@ namespace FutureWonder.Exercises.Configuration
 
     public class App
     {
+        public App(string AppnameI)
+        {
+            Appname = AppnameI;
+        }
+
         public string Appname { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var app = obj as App;
+            return app != null &&
+                   Appname.Equals(app.Appname);
+        }
+
+        public override string ToString()
+        {
+            return Appname;
+        }
     }
 
     public interface IConfig
@@ -74,9 +91,9 @@ namespace FutureWonder.Exercises.Configuration
         #region 3a. App operations
 
         ConfigValue GetValue(App app, string key);
-        KVPList GetValues(App user, KList keys);
-        void SaveValue(App user, KVP kvp);
-        void SaveValues(App user, KVPList kvps);
+        KVPList GetValues(App app, KList keys);
+        void SaveValue(App app, KVP kvp);
+        void SaveValues(App app, KVPList kvps);
 
         #endregion 3a. App operations
 
@@ -94,9 +111,9 @@ namespace FutureWonder.Exercises.Configuration
     {
         private readonly ILog _log = LogManager.GetLogger(nameof(Config));
         private IPersistSource _persistSource;
-        private Exception catchAndThrowException(String message, Exception ex, User user = null)
+        private Exception catchAndThrowException(String message, Exception ex, User user = null, App app = null)
         {
-            _log.Error($"{message} {(user != null ? $"for User {user} " : String.Empty)}: {ex.Message}");
+            _log.Error($"{message} {(app != null ? $"for App {app} " : String.Empty)} {(user != null ? $"for User {user} " : String.Empty)}: {ex.Message}");
             return ex;
         }
         public Config(IPersistSource storage)
@@ -209,11 +226,11 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                throw catchAndThrowException("Persist Exception in  GetValues for User", ex, user);
+                throw catchAndThrowException("Persist Exception in  GetValues for User", ex, user: user);
             }
             catch (Exception ex)
             {
-                throw catchAndThrowException("Exception in  GetValues for User", ex, user);
+                throw catchAndThrowException("Exception in  GetValues for User", ex, user: user);
             }
 
         }
@@ -231,11 +248,11 @@ namespace FutureWonder.Exercises.Configuration
                 }
                 catch (PersistException ex)
                 {
-                    throw catchAndThrowException("Persist Exception in  GetValues for User", ex, user);
+                    throw catchAndThrowException("Persist Exception in  GetValues for User", ex, user: user);
                 }
                 catch (Exception ex)
                 {
-                    throw catchAndThrowException("Exception in  GetValues for User", ex, user);
+                    throw catchAndThrowException("Exception in  GetValues for User", ex, user: user);
                 }
             }
             return kvpList;
@@ -250,11 +267,11 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                throw catchAndThrowException("Persist Exception in SaveValue for User", ex, user);
+                throw catchAndThrowException("Persist Exception in SaveValue for User", ex, user: user);
             }
             catch (Exception ex)
             {
-                throw catchAndThrowException("Exception in SaveValue for User ", ex, user);
+                throw catchAndThrowException("Exception in SaveValue for User ", ex, user: user);
             }
         }
 
@@ -268,33 +285,90 @@ namespace FutureWonder.Exercises.Configuration
             }
             catch (PersistException ex)
             {
-                throw catchAndThrowException("Persist Exception in SaveValues for User", ex, user);
+                throw catchAndThrowException("Persist Exception in SaveValues for User", ex, user: user);
             }
             catch (Exception ex)
             {
-                throw catchAndThrowException("Exception in SaveValues for User", ex, user);
+                throw catchAndThrowException("Exception in SaveValues for User", ex, user: user);
             }
 
         }
 
         public ConfigValue GetValue(App app, string key)
         {
-            throw new NotImplementedException();
+            _log.Info("In GetValue for App " + app);
+
+            try
+            {
+                var kvpList = GetValues(new List<String>() { key }).Where(e => e.Value.App.Equals(app)).ToList();
+                return kvpList[0].Value;
+            }
+            catch (PersistException ex)
+            {
+                throw catchAndThrowException("Persist Exception in  GetValues for App", ex, app: app);
+            }
+            catch (Exception ex)
+            {
+                throw catchAndThrowException("Exception in  GetValues for App", ex, app: app);
+            }
         }
 
-        public KVPList GetValues(App user, KList keys)
+        public KVPList GetValues(App app, KList keys)
         {
-            throw new NotImplementedException();
+            _log.Info("In GetValues for App " + app);
+            KVPList kvpList = null;
+            var storage = _persistSource;
+            if (null != storage)
+            {
+                try
+                {
+                    kvpList = GetValues(keys).Where(e => e.Value.App.Equals(app)).ToList();
+                }
+                catch (PersistException ex)
+                {
+                    throw catchAndThrowException("Persist Exception in  GetValues for App", ex, app: app);
+                }
+                catch (Exception ex)
+                {
+                    throw catchAndThrowException("Exception in  GetValues for App", ex, app: app);
+                }
+            }
+            return kvpList;
         }
 
-        public void SaveValue(App user, KVP kvp)
+        public void SaveValue(App app, KVP kvp)
         {
-            throw new NotImplementedException();
+            _log.Info("in SaveValue for App " + app);
+            try
+            {
+                SaveValues(app, new List<KVP> { kvp });
+            }
+            catch (PersistException ex)
+            {
+                throw catchAndThrowException("Persist Exception in SaveValue for App", ex, app: app);
+            }
+            catch (Exception ex)
+            {
+                throw catchAndThrowException("Exception in SaveValue for App ", ex, app: app);
+            }
         }
 
-        public void SaveValues(App user, KVPList kvps)
+        public void SaveValues(App app, KVPList kvps)
         {
-            throw new NotImplementedException();
+            _log.Info("in SaveValues for App " + app);
+            try
+            {
+                var kvpList = kvps.Where(e => e.Value.App != null && e.Value.App.Equals(app)).ToList();
+                SaveValues(kvpList);
+            }
+            catch (PersistException ex)
+            {
+                throw catchAndThrowException("Persist Exception in SaveValues for App", ex, app: app);
+            }
+            catch (Exception ex)
+            {
+                throw catchAndThrowException("Exception in SaveValues for App", ex, app: app);
+            }
         }
 
         public ConfigValue GetValue(App app, User user, string key)
