@@ -199,7 +199,7 @@ namespace FutureWonder.Exercises.Configuration
                 {
                     kvpList = storage.LoadValues(keys);
                     if (kvpList == null)
-                        throw new PersistException("cannot get the values for the keys " + keys.ToString(), null);
+                        throw new PersistException("cannot get the values for the keys: " + string.Join(",", keys), null);
 
                 }
                 catch (PersistException ex)
@@ -300,7 +300,7 @@ namespace FutureWonder.Exercises.Configuration
 
             try
             {
-                var kvpList = GetValues(new List<String>() { key }).Where(e => e.Value.App.Equals(app)).ToList();
+                var kvpList = GetValues(app, new List<String>() { key }).ToList();
                 return kvpList[0].Value;
             }
             catch (PersistException ex)
@@ -373,22 +373,79 @@ namespace FutureWonder.Exercises.Configuration
 
         public ConfigValue GetValue(App app, User user, string key)
         {
-            throw new NotImplementedException();
+            _log.Info($"In GetValue for App {app} for user {user}");
+
+            try
+            {
+                var kvpList = GetValues(app, user, new List<String>() { key }).ToList();
+                return kvpList[0].Value;
+            }
+            catch (PersistException ex)
+            {
+                throw catchAndThrowException("Persist Exception in  GetValues for App", ex, app: app);
+            }
+            catch (Exception ex)
+            {
+                throw catchAndThrowException("Exception in  GetValues for App", ex, app: app);
+            }
         }
 
         public KVPList GetValues(App app, User user, KList keys)
         {
-            throw new NotImplementedException();
+            _log.Info($"In GetValues for App {app} for user {user}");
+            KVPList kvpList = null;
+            var storage = _persistSource;
+            if (null != storage)
+            {
+                try
+                {
+                    kvpList = GetValues(user, keys).Where(e => e.Value.App.Equals(app)).ToList();
+                }
+                catch (PersistException ex)
+                {
+                    throw catchAndThrowException("Persist Exception in GetValues for App with User", ex, app: app, user: user);
+                }
+                catch (Exception ex)
+                {
+                    throw catchAndThrowException("Exception in GetValues for App with User", ex, app: app, user: user);
+                }
+            }
+            return kvpList;
         }
 
         public void SaveValue(App app, User user, KVP kvp)
         {
-            throw new NotImplementedException();
+            _log.Info($"in SaveValue for App {app} for user {user}");
+            try
+            {
+                SaveValues(app, user, new List<KVP> { kvp });
+            }
+            catch (PersistException ex)
+            {
+                throw catchAndThrowException("Persist Exception in SaveValue for App with User ", ex, app: app, user: user);
+            }
+            catch (Exception ex)
+            {
+                throw catchAndThrowException("Exception in SaveValue for App with User ", ex, app: app, user: user);
+            }
         }
 
         public void SaveValues(App app, User user, KVPList kvps)
         {
-            throw new NotImplementedException();
+            _log.Info($"in SaveValues for App {app} for user {user}");
+            try
+            {
+                var kvpList = kvps.Where(e => e.Value.App != null && e.Value.App.Equals(app)).ToList();
+                SaveValues(user, kvpList);
+            }
+            catch (PersistException ex)
+            {
+                throw catchAndThrowException("Persist Exception in SaveValues for App with User ", ex, app: app, user: user);
+            }
+            catch (Exception ex)
+            {
+                throw catchAndThrowException("Exception in SaveValues for App with User ", ex, app: app, user: user);
+            }
         }
 
 

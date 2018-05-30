@@ -23,6 +23,7 @@ namespace FutureWonder.Exercises.Configuration
         private Config _config;
 
         private List<String> KeyList { get { return new List<string>() { "Key1", "Key2", "Key3" }; } }
+        private List<String> KeyList2 { get { return new List<string>() { "Key3", "Key4", "Key5" }; } }
         private KVPList Kvplist
         {
             get
@@ -71,6 +72,42 @@ namespace FutureWonder.Exercises.Configuration
                         }),
                         new KeyValuePair<string, ConfigValue>(KeyList[1], new ConfigValue(){ Value = 2.ToString(),ValueType = ValueType.ValueInt,App=AppTestObject}),
                         new KeyValuePair<string, ConfigValue>(KeyList[2], new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString,App=AppTestObject }),
+                    };
+            }
+        }
+        private KVPList KvpAppListNull
+        {
+            get
+            {
+                return
+                    new List<KeyValuePair<string, ConfigValue>>()
+                    {
+                        new KeyValuePair<string, ConfigValue>(KeyList[0], new ConfigValue(){
+                            Value = null,
+                            ValueType = ValueType.ValueString,
+                            App = AppTestObject
+                        }),
+                        new KeyValuePair<string, ConfigValue>(KeyList[1], new ConfigValue(){ Value =null,ValueType = ValueType.ValueInt}),
+                        new KeyValuePair<string, ConfigValue>(KeyList[2], new ConfigValue(){ Value = null,ValueType = ValueType.ValueString }),
+                    };
+            }
+        }
+
+        private KVPList KvpAppWithUserList
+        {
+            get
+            {
+                return
+                    new List<KeyValuePair<string, ConfigValue>>()
+                    {
+                        new KeyValuePair<string, ConfigValue>(KeyList[0], new ConfigValue(){
+                            Value = "1",
+                            ValueType = ValueType.ValueString,
+                            App = AppTestObject,
+                            User = UserTestObject
+                        }),
+                        new KeyValuePair<string, ConfigValue>(KeyList[1], new ConfigValue(){ Value = 2.ToString(),ValueType = ValueType.ValueInt,App=AppTestObject,User = UserTestObject}),
+                        new KeyValuePair<string, ConfigValue>(KeyList[2], new ConfigValue(){ Value = "3",ValueType = ValueType.ValueString,App=AppTestObject,User = UserTestObject}),
                     };
             }
         }
@@ -128,7 +165,7 @@ namespace FutureWonder.Exercises.Configuration
             var convertedConfigValue = _config.GetValue(KeyList[0]);
             Assert.AreEqual(Kvplist[0].Value.Value, convertedConfigValue.Value);
         }
-
+        #region basic key value store Tests
         [TestMethod]
         public void SaveValue_ShouldSaveAndVerifyTheValueToPersistentSource()
         {
@@ -175,8 +212,8 @@ namespace FutureWonder.Exercises.Configuration
             var convertedConfigValues = _config.GetValues(KeyList);
             Assert.IsTrue(convertedConfigValues.Intersect(Kvplist).Count() == 3);
         }
-
-
+        #endregion
+        #region keys with User Tests
         [TestMethod]
         public void SaveUserValue_ShouldSaveAndVerifyTheValueForAUserToPersistentSource()
         {
@@ -221,7 +258,8 @@ namespace FutureWonder.Exercises.Configuration
             var convertedConfigValues = _config.GetValues(UserTestObject, KeyList);
             Assert.IsTrue(convertedConfigValues.Intersect(KvpUserlist).Count() == 3);
         }
-
+        #endregion
+        #region Keys of App Tests
         [TestMethod]
         public void SaveAppValue_ShouldSaveAndVerifyTheValueForAAppToPersistentSource()
         {
@@ -266,5 +304,52 @@ namespace FutureWonder.Exercises.Configuration
             var convertedConfigValues = _config.GetValues(AppTestObject, KeyList);
             Assert.IsTrue(convertedConfigValues.Intersect(KvpAppList).Count() == 3);
         }
+        #endregion
+        #region Keys of App with User Tests
+        [TestMethod]
+        public void SaveAppUserValue_ShouldSaveAndVerifyTheValueForAnAppWithUserToPersistentSource()
+        {
+
+            _log.Info("Save App with User Value Test");
+
+            _config.SaveValues(AppTestObject, UserTestObject, KvpAppWithUserList);
+            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(k => k.Intersect(KvpAppWithUserList).Count() == 3)), Times.Once);
+        }
+
+        [TestMethod]
+        public void SaveAppUserValues_ShouldSaveAndVerifyTheValuesForAAppToPersistentSource()
+        {
+            _log.Info("Save App with User Values Test");
+
+            KVPList kvpList = KvpAppWithUserList.Where(e => e.Key.Equals(KeyList[0])).ToList();
+            _config.SaveValues(AppTestObject, UserTestObject, kvpList);
+
+            _persistSource.Verify(e => e.PersistValues(It.Is<KVPList>(klist => klist.Count == 1 && klist.Intersect(kvpList).Count() == 1)), Times.Once);
+        }
+
+        [TestMethod]
+        public void GetAppUserValue_GetsAndVerifyTheValueForAAppFromPersistentSource()
+        {
+            _log.Info("Get App with User Value Test");
+
+            KVPList _kvpList = KvpAppWithUserList.Where(e => e.Key.Equals(KeyList[0])).ToList();
+
+            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<KList>())).Returns(_kvpList);
+
+            var configVal = _config.GetValue(AppTestObject, UserTestObject, KeyList[0]);
+
+            Assert.AreEqual(_kvpList[0].Value, configVal);
+        }
+
+        [TestMethod]
+        public void GetAppUserValues_GetsAndVerifyTheValuesForAAppFromPersistentSource()
+        {
+            _log.Info("Get App with User Values Test");
+            _persistSource.Setup(ps => ps.LoadValues(It.IsAny<List<string>>())).Returns(KvpAppWithUserList);
+
+            var convertedConfigValues = _config.GetValues(AppTestObject, UserTestObject, KeyList);
+            Assert.IsTrue(convertedConfigValues.Intersect(KvpAppWithUserList).Count() == 3);
+        }
+        #endregion
     }
 }
