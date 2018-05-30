@@ -23,7 +23,6 @@ namespace FutureWonder.Exercises.Configuration
         private Config _config;
 
         private List<String> KeyList { get { return new List<string>() { "Key1", "Key2", "Key3" }; } }
-        private List<String> KeyList2 { get { return new List<string>() { "Key3", "Key4", "Key5" }; } }
         private KVPList Kvplist
         {
             get
